@@ -1,0 +1,76 @@
+<html>
+
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+
+    var gam;
+
+    // =============================================
+    // 1 - connect to node socket.io server
+    // =============================================
+    var socket = io.connect('/');
+
+    socket.on('connect', function() {
+      console.log("Connected");
+    });
+
+    function init() {
+
+      // These help with cross-browser functionality
+      window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+      // if we have the method
+      if (navigator.getUserMedia) {
+        navigator.getUserMedia({video: true}, function(stream) {
+            video.src = window.URL.createObjectURL(stream) || stream;
+            video.play();
+          }, function(error) {alert("Failure " + error.code);});
+      }
+
+      // The video element on the page to display the webcam
+      var video = document.getElementById('thevideo');
+
+      // get the canvases from the body
+      var videoCanvas = document.getElementById('videoCanvas');
+      var context1 = videoCanvas.getContext('2d');
+
+      //Find our div containers in the DOM
+      var dataContainerOrientation = document.getElementById('dataContainerOrientation');
+
+            //draw the video's content to canvas 1 every 3 seconds
+      var draw = function() {
+        context1.drawImage(video,0,0,video.width,video.height);
+
+        var dataUrl = videoCanvas.toDataURL('image/webp', 1);
+        document.getElementById('imagefile').src = dataUrl;
+        socket.emit('masterVideo', dataUrl);
+
+        console.log('sent video ' + dataUrl )
+
+        setTimeout(draw,200);         
+      };
+
+      draw();
+
+    // setInterval(sendGamma, 500);
+  }
+    </script>
+  </head>
+
+  <body onload="init()">
+
+    <img src="" id="imagefile">
+
+    <video id="thevideo" width="400" height="300" autoplay></video>
+
+    <div id="canvasDiv" style="position:relative; width:400px; height:300px">
+
+      <canvas id="videoCanvas" style="z-index:1; position:absolute; left:0px; top0px;" width="400" height="300">Error.</canvas>
+
+    </div>  
+
+  </body>
+
+</html>
